@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Versicherung</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            max-width: 600px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        label {
+            width: 30%;
+            font-weight: bold;
+        }
+        input, select {
+            width: 65%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #result {
+            background-color: #e9ecef;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+<h1>Versicherungsberechung</h1>
+<form id="insuranceForm">
+    <div class="form-group">
+        <label for="versicherung">Versicherungsart:</label>
+        <select id="versicherung" name="versicherung" required>
+            <option value="Auto">Auto</option>
+            <option value="Haus">Haus</option>
+            <option value="Gesundheit">Gesundheit</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="alter">Alter des Kunden:</label>
+        <input type="number" id="alter" name="alter" required>
+    </div>
+
+    <div class="form-group">
+        <label for="plz">Postleitzahl des Kunden:</label>
+        <input type="text" id="plz" name="plz" required pattern="^[0-9]{5}$" placeholder="z.B. 12345">
+    </div>
+
+    <div class="form-group">
+        <label for="deckung">Deckungsumfang:</label>
+        <select id="deckung" name="deckung" required>
+            <option value="Basis">Basis</option>
+            <option value="Premium">Premium</option>
+            <option value="VIP">VIP</option>
+        </select>
+    </div>
+
+    <button type="submit">Berechnen</button>
+</form>
+
+<h2>Ergebnis:</h2>
+<div id="error-message" style="color: red; font-weight: bold;"></div>
+<pre id="result"></pre>
+
+<h2>Berechnung abrufen</h2>
+<div class="form-group">
+    <label for="berechnungId">Berechnung ID:</label>
+    <input type="number" id="berechnungId" placeholder="z.B. 1">
+    <button id="getBerechnung">Abrufen</button>
+</div>
+
+
+<pre id="resultId"></pre>
+
+<script>
+
+document.getElementById('getBerechnung').addEventListener('click', function() {
+    const id = document.getElementById('berechnungId').value;
+
+
+    document.getElementById('error-message').textContent = '';
+
+    fetch(`http://localhost:8080/beitrag/${id}`)
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => { throw new Error(text) }); // Hata mesajını yakala
+        }
+        return response.json();
+    })
+    .then(data => {
+        document.getElementById('resultId').textContent = JSON.stringify(data, null, 2);
+    })
+    .catch(error => {
+
+        document.getElementById('error-message').textContent = `Fehler: ${error.message}`;
+        console.error('Fehler:', error);
+    });
+});
+
+
+document.getElementById('insuranceForm').addEventListener('submit', function(event) {
+    event.preventDefault();  // Sayfanın yenilenmesini önler
+
+
+    document.getElementById('error-message').textContent = '';
+
+
+    const formData = {
+        versicherunsgsart: document.getElementById('versicherung').value, // Burada düzeltme yapıldı
+        age: document.getElementById('alter').value,
+        postzahl: document.getElementById('plz').value,
+        deckungsumfang: document.getElementById('deckung').value
+    };
+
+
+    fetch('http://localhost:8080/beitrag-berechnen', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => { throw new Error(text) }); // Hata mesajını yakala
+        }
+        return response.json();
+    })
+    .then(data => {
+
+        document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+    })
+    .catch(error => {
+
+        document.getElementById('error-message').textContent = `Fehler: ${error.message}`;
+        console.error('Fehler:', error);
+    });
+});
+
+</script>
+<script>
+    document.getElementById("insuranceForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        // ******************
+        document.getElementById('resultId').textContent = '';
+        document.getElementById('error-message').textContent = '';
+
+        //*************
+        const Versicherunsgsart = document.getElementById("versicherungsart").value;
+        const Age = document.getElementById("alter").value;
+        const Postzahl = document.getElementById("plz").value;
+        const Deckungsumfang = document.getElementById("deckung").value;
+
+        // JSON
+        const data = {
+            versicherunsgsart: Versicherunsgsart,
+            age: Age,
+            postzahl: Postzahl,
+            deckungsumfang: Deckungsumfang
+        };
+
+        // POST
+        fetch('http://localhost:8080/beitrag-berechnen', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => { throw new Error(text) });
+            }
+            return response.json();
+        })
+        .then(data => {
+            // RESPONSE
+            document.getElementById('resultId').textContent = JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+            //CLEAN
+            alert(error.message);
+            document.getElementById('resultId').textContent = '';
+            document.getElementById('error-message').textContent = `Fehler: ${error.message}`;
+            console.error('Fehler:', error);
+        });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Versicherungsberechnung</title>
+</head>
+<body>
+<h1>Versicherungsberechnung</h1>
+<form id="insuranceForm">
+  <div>
+    <label for="versicherungsart">Versicherungsart:</label>
+    <input type="text" id="versicherungsart" name="versicherungsart" required>
+  </div>
+
+  <div>
+    <label for="alter">Alter des Kunden:</label>
+    <input type="number" id="alter" name="alter" required>
+  </div>
+
+  <div>
+    <label for="plz">Postleitzahl des Kunden:</label>
+    <input type="text" id="plz" name="plz">
+  </div>
+
+  <div>
+    <label for="deckung">Deckungsumfang:</label>
+    <input type="text" id="deckung" name="deckung">
+  </div>
+
+  <button type="submit">Berechnen</button>
+</form>
+
+<pre id="resultId"></pre>
+<pre id="error-message"></pre>
+
+<script>
+  document.getElementById("insuranceForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        // ******************
+        document.getElementById('resultId').textContent = '';
+        document.getElementById('error-message').textContent = '';
+
+        //*************
+        const Versicherunsgsart = document.getElementById("versicherungsart").value;
+        const Age = document.getElementById("alter").value;
+        const Postzahl = document.getElementById("plz").value;
+        const Deckungsumfang = document.getElementById("deckung").value;
+
+        // JSON
+        const data = {
+            versicherunsgsart: Versicherunsgsart,
+            age: Age,
+            postzahl: Postzahl,
+            deckungsumfang: Deckungsumfang
+        };
+
+        // POST
+        fetch('http://localhost:8080/beitrag-berechnen', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => { throw new Error(text) });
+            }
+            return response.json();
+        })
+        .then(data => {
+            // RESPONSE
+            document.getElementById('resultId').textContent = JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+            //CLEAN
+            document.getElementById('resultId').textContent = '';
+            document.getElementById('error-message').textContent = `Fehler: ${error.message}`;
+            alert(error.message);
+            console.error('Fehler:', error);
+        });
+  });
+</script>
+
+</body>
+</html>
